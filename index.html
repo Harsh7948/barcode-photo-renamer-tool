@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Created by Harsh - Ultimate Secure Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .glass-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08); }
+        .drop-zone { border: 3px dashed #10b981; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-zone:hover { background-color: #ecfdf5; border-color: #059669; transform: translateY(-2px); }
+        .barcode-scan-box { border: 2px solid #34d399; border-radius: 1rem; padding: 1rem; background: #ffffff; box-shadow: 0 10px 20px -10px rgba(52, 211, 153, 0.15); transition: all 0.3s ease; }
+        .barcode-scan-box:focus-within { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2), 0 10px 20px -10px rgba(52, 211, 153, 0.2); transform: translateY(-2px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .error-shake { animation: shake 0.3s ease-in-out; }
+        .zoom-cursor { cursor: zoom-in; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden text-slate-800 antialiased flex flex-col">
+
+    <!-- GLOBAL LOADER -->
+    <div id="globalLoader" class="fixed inset-0 hidden flex-col items-center justify-center z-[100] bg-slate-900/90 backdrop-blur-sm">
+        <svg class="animate-spin h-14 w-14 text-green-500 mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h2 id="globalLoaderText" class="text-2xl font-black text-white uppercase tracking-widest text-center">Processing...</h2>
+    </div>
+
+    <nav class="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shadow-sm">
+        <!-- LEFT: Title (Matching the image) -->
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-black text-[#00a676] tracking-tight uppercase">Barcode Photo Renamer</h1>
+            <span class="bg-indigo-100/80 text-[#5c6ac4] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest">Ultimate Secure DB Engine</span>
+        </div>
+        
+        <!-- MIDDLE: Location Setter & Viewer -->
+        <div class="flex items-center justify-center flex-grow">
+            <div class="flex items-center gap-3 bg-blue-50/50 px-4 py-1.5 rounded-xl border border-blue-200 shadow-sm">
+                <div class="bg-blue-100 p-1.5 rounded-lg shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Save Location</span>
+                    <span id="currentLocationDisplay" class="text-[12px] font-black text-blue-600 max-w-[150px] truncate leading-none" title="Output Folder">Not Set</span>
+                </div>
+                <div class="flex items-center gap-1 ml-2">
+                    <button id="setLocationBtn" class="bg-white hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95">
+                        Set Folder
+                    </button>
+                    <button id="viewFolderBtn" onclick="openFolderExplorer()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        View Folder
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Reset All (Matching the image) -->
+        <div class="flex items-center">
+            <button onclick="document.getElementById('globalResetModal').classList.remove('hidden')" class="bg-red-50/50 hover:bg-red-100 text-[#e11d48] border border-[#fca5a5] px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                Reset All
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow overflow-hidden p-3 w-full h-full max-w-[1800px] mx-auto flex flex-col relative">
+        <input type="file" id="addQueueInput" multiple accept="image/*" class="hidden">
+
+        <section id="setupStep" class="glass-card p-10 border border-white shadow-xl max-w-3xl w-full mx-auto my-auto flex flex-col items-center justify-center">
+            <div class="drop-zone p-12 rounded-3xl cursor-pointer group w-full text-center" onclick="document.getElementById('fileInput').click()">
+                <div class="bg-gradient-to-tr from-green-100 to-emerald-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Upload Workspace</h3>
+                <p class="text-slate-500 mt-2 text-xs font-medium">Select a batch of photos to start scanning.</p>
+                <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+            </div>
+        </section>
+
+        <section id="renameStep" class="h-full w-full hidden flex-row gap-3">
+            
+            <div class="w-3/5 flex flex-col h-full glass-card p-3 border border-white shadow-xl relative">
+                <button id="skipBtn" class="absolute top-5 right-5 z-10 bg-white/90 hover:bg-red-50 text-slate-400 hover:text-red-600 border border-slate-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors flex items-center gap-1.5 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Skip
+                </button>
+
+                <div class="relative w-full flex-grow min-h-0 flex justify-center items-center bg-slate-100/50 rounded-xl overflow-hidden mb-3 p-2 shadow-inner border border-slate-100 group">
+                    <img id="imagePreview" src="" alt="Preview" class="max-w-full max-h-full object-contain shadow-lg rounded-lg hidden transition-all duration-300 zoom-cursor hover:opacity-95" title="Click to View Full Screen" onclick="openZoomModal()">
+                    <div id="noImage" class="flex flex-col items-center justify-center text-slate-300 h-full w-full p-6 text-center"></div>
+                </div>
+                
+                <div class="shrink-0 flex flex-col items-center w-full">
+                    <div class="flex flex-row items-center justify-center gap-3 mb-2 w-full" id="controlsRow">
+                        <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 shadow-sm transition-all" id="toggleContainer">
+                            <span class="text-[9px] font-black text-indigo-800 uppercase tracking-[0.1em]">Copy Mode (Set)</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" id="autoCopyToggle" class="sr-only peer">
+                              <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
+                            </label>
+                        </div>
+                        <div id="fileNamePill" class="bg-slate-200/50 text-slate-600 px-5 py-2 rounded-full border border-slate-200 shadow-sm text-[10px] font-bold uppercase tracking-tight transition-colors truncate max-w-[200px] text-center">
+                            <span id="currentFileName">FILENAME.JPG</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-sm" id="barcodeBoxContainer">
+                        <div class="barcode-scan-box text-center relative group p-2">
+                            <div class="flex justify-center items-center gap-1.5 mb-1.5">
+                                <span class="relative flex h-2 w-2">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                <label class="block text-[9px] font-black text-green-800 uppercase tracking-[0.3em]">SCAN BARCODE NOW</label>
+                            </div>
+                            <input type="text" id="barcodeInput" autocomplete="off" class="w-full text-2xl font-black text-center border-none focus:outline-none text-slate-700 bg-transparent placeholder-slate-200" placeholder="00000000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-2/5 flex flex-col h-full glass-card border border-white shadow-xl overflow-hidden p-2.5 gap-2.5 bg-slate-50/50">
+                
+                <div class="flex flex-col flex-1 min-h-0 border border-slate-200 bg-white rounded-xl overflow-hidden shadow-sm">
+                    
+                    <!-- UPDATED CURRENT SCANS HEADER WITH LARGE UNDO/REDO -->
+                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center shrink-0">
+                        <div class="flex items-center gap-4">
+                            <h3 class="font-black text-[11px] text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                Current Scans ( <span id="scannedCount" class="text-emerald-600">0</span> )
+                            </h3>
+                            <div class="flex items-center gap-2 border-l-2 border-slate-200 pl-4">
+                                <button id="undoBtn" onclick="undoAction()" class="px-3 py-1.5 bg-orange-100 border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-200 transition opacity-50 cursor-default shadow-sm active:scale-95 flex items-center gap-1 font-black text-[10px] uppercase tracking-widest" disabled title="Undo (Ctrl+Z)">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                    Undo
+                                </button>
+                                <button id="redoBtn" onclick="redoAction()" class="px-3 py-1.5 bg-purple-100 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-200 transition opacity-50 cursor-default shadow-sm active:scale-95 flex items-center gap-1 font-black text-[10px] uppercase tracking-widest" disabled title="Redo (Ctrl+Y)">
+                                    Redo
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-blue-50/50 px-2 py-1 rounded-md border border-blue-100/50">
+                            Remaining: <span id="remainingCount" class="text-blue-600 text-[12px]">0</span>
+                        </span>
+                    </div>
+
+                    <div class="flex-grow overflow-y-auto custom-scrollbar relative">
+                        <table class="min-w-full divide-y divide-slate-100">
+                            <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="px-3 py-1.5 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">Image</th>
+                                    <th class="px-2 py-1.5 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">New Name</th>
+                                    <th class="px-2 py-1.5 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">Old Name</th>
+                                    <th class="px-2 py-1.5 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-50 text-xs font-medium"></tbody>
+                        </table>
+                        <div id="emptyHistory" class="text-center py-6 text-slate-300 italic text-[9px] font-semibold tracking-widest absolute w-full top-4 left-0 pointer-events-none flex flex-col items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Waiting for scans...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shrink-0">
+                    <button id="addToQueueBtn" class="w-full bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition active:scale-95 flex items-center justify-center gap-1.5 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        Save & Move to Batch Queue
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                </div>
+
+                <div class="flex flex-col shrink-0 max-h-[35%] border border-slate-200 bg-slate-100/50 rounded-xl overflow-hidden shadow-inner">
+                    <div class="bg-slate-200/50 px-4 py-2 border-b border-slate-200 flex justify-between items-center shrink-0">
+                        <h3 class="font-black text-[9px] text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                            Batch Queue (<span id="queueCountBadge" class="text-indigo-600">0</span>)
+                        </h3>
+                        <button id="clearQueueBtn" class="text-[8px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest">Clear</button>
+                    </div>
+                    <div id="queueListContainer" class="flex-grow overflow-y-auto custom-scrollbar p-2 flex flex-col gap-2">
+                        <div id="emptyQueue" class="flex flex-col items-center justify-center text-slate-400 py-2 h-full"><p class="text-[9px] font-black uppercase tracking-widest">Queue is empty</p></div>
+                    </div>
+                </div>
+                
+                <div class="shrink-0 flex gap-2 pt-1" id="actionButtonsContainer">
+                    <button id="downloadZipBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-black text-[11px] hover:from-blue-700 hover:to-indigo-700 shadow-md flex items-center justify-center gap-1.5 transform transition active:scale-95 uppercase tracking-widest">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Download All
+                    </button>
+                </div>
+                
+            </div>
+        </section>
+    </main>
+
+    <!-- FULL SCREEN IMAGE VIEWER -->
+    <div id="imageZoomModal" class="fixed inset-0 hidden flex items-center justify-center z-[60] p-4 bg-slate-900/95 backdrop-blur-md cursor-zoom-out" onclick="closeZoomModal()">
+        <img id="zoomedImage" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-xl" alt="Zoomed Preview">
+        <div class="absolute top-6 right-6 bg-white/20 text-white p-2 rounded-full hover:bg-white/40 transition cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 hidden flex items-center justify-center z-[70] p-4 bg-slate-900/80 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-xs w-full p-8 border border-white transform transition-all scale-100">
+            <h3 class="text-lg font-black text-slate-800 mb-6 text-center uppercase tracking-wider">Edit Barcode</h3>
+            <div class="mb-6 text-center">
+                <img id="editThumbPreview" src="" class="mx-auto w-32 h-32 object-cover rounded-2xl shadow-md mb-4 border-4 border-slate-50">
+                <input type="text" id="editInput" class="w-full p-3 text-xl font-black border-2 border-blue-500 rounded-xl focus:outline-none text-center text-blue-600 shadow-sm bg-blue-50/30" placeholder="New Barcode">
+                <p id="editError" class="text-red-600 text-[10px] font-black mt-2 hidden uppercase"></p>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancelEdit" class="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl text-xs font-black uppercase hover:bg-slate-200 transition">Cancel</button>
+                <button id="saveEdit" class="flex-1 px-3 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Details Modal -->
+    <div id="batchDetailsModal" class="fixed inset-0 hidden flex items-center justify-center z-[65] p-4 bg-slate-900/90 backdrop-blur-sm">
+        <div class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600 font-black text-sm" id="batchModalId">#0</div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Batch Details</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"><span id="batchModalCount">0</span> Photos in this batch</p>
+                    </div>
+                </div>
+                <button onclick="closeBatchDetailsModal()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 p-1.5 rounded-lg transition-colors shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="flex-grow overflow-y-auto custom-scrollbar relative bg-white p-0">
+                <table class="min-w-full divide-y divide-slate-100">
+                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Image</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">New Barcode</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Original File</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchDetailsTableBody" class="divide-y divide-slate-50 text-xs font-medium"></tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 shrink-0 flex justify-between items-center">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">View only mode.</p>
+                <button id="unpackBatchBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm transition active:scale-95">Unpack to Current Scans</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCAL FOLDER EXPLORER MODAL -->
+    <div id="folderExplorerModal" class="fixed inset-0 hidden flex items-center justify-center z-[65] p-4 bg-slate-900/90 backdrop-blur-sm">
+        <div class="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 p-2.5 rounded-lg text-blue-600">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Local Folder Explorer</h3>
+                        <div id="explorerBreadcrumb" class="text-[10px] text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+                            Home
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeFolderExplorer()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 p-1.5 rounded-lg transition-colors shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div id="explorerListContainer" class="flex-grow overflow-y-auto custom-scrollbar bg-slate-50 p-4 min-h-[350px]">
+                <!-- Contents dynamically loaded here (Folders & large direct-from-disk photo tiles) -->
+            </div>
+            
+            <div class="px-6 py-4 bg-slate-100 border-t border-slate-200 shrink-0 flex justify-between items-center">
+                <p class="text-[9px] text-slate-500 font-black uppercase tracking-widest flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-blue-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Showing live previews of renamed photos directly from your hard drive
+                </p>
+                <button onclick="closeFolderExplorer()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition active:scale-95">Close Explorer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="globalResetModal" class="fixed inset-0 hidden flex items-center justify-center z-[80] p-4 bg-slate-900/80 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-8 text-center border border-white">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 mb-6 border border-red-100">
+                <svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-3 uppercase">Reset Entire Workspace?</h3>
+            <p class="text-slate-500 mb-6 text-[12px] font-medium leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                This will delete all scanned items, queues, and files from memory. This action <span class="text-red-500 font-bold">cannot be undone</span>.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('globalResetModal').classList.add('hidden')" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-black uppercase hover:bg-slate-200 transition">Cancel</button>
+                <button id="confirmGlobalReset" class="flex-1 py-3.5 bg-red-600 text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-200 hover:bg-red-700 transition">Yes, Wipe All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 z-50 font-black text-[10px] uppercase tracking-widest pointer-events-none flex items-center gap-2">
+        <span id="toastIcon"></span>
+        <span id="toastMsg">Message</span>
+    </div>
+
+    <script>
+        // Core State
+        let files = [], currentIndex = 0, renamedFiles = [], batches = [], editingIndex = -1, currentMainUrl = null, isProcessingCopy = false; 
+        let undoStack = [], redoStack = [];
+        let globalOutputHandle = null; 
+        
+        // Explorer Navigation & Preview Cache State
+        let currentDirHandle = null;
+        let dirNavigationStack = [];
+        let explorerUrlCleanupList = []; 
+
+        // DOM Elements
+        const setupStep = document.getElementById('setupStep'), renameStep = document.getElementById('renameStep'), fileInput = document.getElementById('fileInput'), imagePreview = document.getElementById('imagePreview'), currentFileNameDisplay = document.getElementById('currentFileName'), fileNamePill = document.getElementById('fileNamePill'), noImage = document.getElementById('noImage'), barcodeInput = document.getElementById('barcodeInput'), historyTableBody = document.getElementById('historyTableBody'), emptyHistory = document.getElementById('emptyHistory'), downloadZipBtn = document.getElementById('downloadZipBtn'), autoCopyToggle = document.getElementById('autoCopyToggle'), barcodeBoxContainer = document.getElementById('barcodeBoxContainer'), controlsRow = document.getElementById('controlsRow'), skipBtn = document.getElementById('skipBtn'), remainingCountEl = document.getElementById('remainingCount'), queueListContainer = document.getElementById('queueListContainer'), emptyQueue = document.getElementById('emptyQueue'), addQueueInput = document.getElementById('addQueueInput');
+
+        // IndexedDB Vault
+        const DB_NAME = "PhotoRenamerSecureVault", STORE_NAME = "images";
+        let idbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 5); 
+            request.onupgradeneeded = (e) => { 
+                const db = e.target.result;
+                if(db.objectStoreNames.contains(STORE_NAME)) db.deleteObjectStore(STORE_NAME);
+                db.createObjectStore(STORE_NAME); 
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        async function bulkSaveToDB(filesArr) {
+            const db = await idbPromise;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                for(let item of filesArr) store.put(item.fileObj, item.dbId);
+                tx.oncomplete = resolve; tx.onerror = reject;
+            });
+        }
+
+        async function getFileFromDB(id) {
+            const db = await idbPromise;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const req = tx.objectStore(STORE_NAME).get(id);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = reject;
+            });
+        }
+
+        async function clearVaultDB() {
+            const db = await idbPromise;
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).clear();
+                tx.oncomplete = resolve;
+            });
+        }
+
+        // Settings Database for persisting Location Handle
+        const SETTINGS_DB = "RenamerSettingsDB";
+        let settingsDbPromise = new Promise((resolve) => {
+            const req = indexedDB.open(SETTINGS_DB, 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore("config");
+            req.onsuccess = () => resolve(req.result);
+        });
+
+        async function saveGlobalLocation(handle) {
+            const db = await settingsDbPromise;
+            return new Promise(res => {
+                const tx = db.transaction("config", "readwrite");
+                tx.objectStore("config").put(handle, "outputDir");
+                tx.oncomplete = res;
+            });
+        }
+
+        async function getGlobalLocation() {
+            const db = await settingsDbPromise;
+            return new Promise(res => {
+                const req = db.transaction("config", "readonly").objectStore("config").get("outputDir");
+                req.onsuccess = () => res(req.result || null);
+                req.onerror = () => res(null);
+            });
+        }
+
+        async function verifyPermission(fileHandle, readWrite) {
+            const options = {};
+            if (readWrite) { options.mode = 'readwrite'; }
+            if ((await fileHandle.queryPermission(options)) === 'granted') return true;
+            if ((await fileHandle.requestPermission(options)) === 'granted') return true;
+            return false;
+        }
+
+        // FULL STATE SNAPSHOT (SOLVES ALL UNDO/REDO ISSUES & LAG/CHIPKAVANU)
+        function saveStateForUndo() {
+            // Memory optimization: Shallow copy structure so it never lags the browser
+            undoStack.push({
+                currentIndex,
+                isProcessingCopy,
+                renamedFiles: [...renamedFiles],
+                files: [...files]
+            });
+            // Stop memory leak & free browser RAM: Keep max 50 Undos 
+            if(undoStack.length > 50) undoStack.shift(); 
+            redoStack = []; 
+            updateUndoRedoUI();
+        }
+
+        function saveWorkspaceState() {
+            localStorage.setItem('renamer_workspace_v2', JSON.stringify({ files, currentIndex, renamedFiles, batches, isProcessingCopy, undoStack, redoStack }));
+        }
+
+        async function loadWorkspaceState() {
+            const savedToggle = localStorage.getItem('renamer_auto_copy') === 'true';
+            autoCopyToggle.checked = savedToggle;
+            if(savedToggle) document.getElementById('toggleContainer').classList.add('ring-2', 'ring-indigo-400', 'ring-offset-2');
+
+            const saved = localStorage.getItem('renamer_workspace_v2');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    if ((state.files && state.files.length > 0) || (state.batches && state.batches.length > 0)) {
+                        files = state.files || []; currentIndex = state.currentIndex || 0; renamedFiles = state.renamedFiles || []; batches = state.batches || []; isProcessingCopy = state.isProcessingCopy || false; undoStack = state.undoStack || []; redoStack = state.redoStack || [];
+                        setupStep.style.display = 'none'; renameStep.style.display = 'flex';
+                        updateHistoryUI(); updateUndoRedoUI(); renderBatches(); await refreshUIState();
+                        return true;
+                    }
+                } catch(e) {}
+            }
+            return false;
+        }
+        
+        document.addEventListener("DOMContentLoaded", async () => {
+            loadWorkspaceState();
+            globalOutputHandle = await getGlobalLocation();
+            if (globalOutputHandle) {
+                document.getElementById('currentLocationDisplay').innerText = globalOutputHandle.name;
+                document.getElementById('viewFolderBtn').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('setLocationBtn').addEventListener('click', async () => {
+            try {
+                const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                globalOutputHandle = handle;
+                await saveGlobalLocation(handle);
+                document.getElementById('currentLocationDisplay').innerText = handle.name;
+                document.getElementById('viewFolderBtn').classList.remove('hidden');
+                showToast("DEFAULT LOCATION SET!", "success");
+            } catch(e) {
+                console.log("Location picker cancelled", e);
+            }
+        });
+
+        // ==============================================================
+        // NATIVE LOCAL DIRECTORY EXPLORER ENGINE 
+        // ==============================================================
+        async function openFolderExplorer() {
+            if (!globalOutputHandle) {
+                showToast("PLEASE SET DOWNLOAD LOCATION FIRST!", "error");
+                document.getElementById('setLocationBtn').click();
+                return;
+            }
+            const hasPerm = await verifyPermission(globalOutputHandle, true);
+            if (!hasPerm) {
+                showToast("FOLDER PERMISSION DENIED!", "error");
+                return;
+            }
+
+            currentDirHandle = globalOutputHandle;
+            dirNavigationStack = [{ handle: globalOutputHandle, name: globalOutputHandle.name }];
+            
+            document.getElementById('folderExplorerModal').classList.remove('hidden');
+            document.getElementById('folderExplorerModal').classList.add('flex');
+            await renderExplorerContents();
+        }
+
+        async function renderExplorerContents() {
+            const container = document.getElementById('explorerListContainer');
+            container.innerHTML = `<div class="p-8 text-center text-xs font-black text-slate-400">Reading Directory & Fetching Photo Previews...</div>`;
+            
+            explorerUrlCleanupList.forEach(url => URL.revokeObjectURL(url));
+            explorerUrlCleanupList = [];
+
+            const breadcrumb = document.getElementById('explorerBreadcrumb');
+            breadcrumb.innerHTML = dirNavigationStack.map((step, idx) => {
+                return `<span class="hover:text-blue-600 cursor-pointer font-black" onclick="navigateExplorerTo(${idx})">${step.name}</span>`;
+            }).join(' <span class="text-slate-300">/</span> ');
+
+            try {
+                let entries = [];
+                for await (const entry of currentDirHandle.values()) {
+                    entries.push(entry);
+                }
+
+                entries.sort((a, b) => {
+                    if (a.kind === b.kind) return a.name.localeCompare(b.name, undefined, {numeric: true});
+                    return a.kind === 'directory' ? -1 : 1;
+                });
+
+                if (entries.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-12 text-center text-xs font-bold text-slate-400 italic flex flex-col items-center gap-2">
+                            <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 012-2h10a2 2 0 012 2v2H5v-2z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 10h10M7 14h10M7 6h10" /></svg>
+                            This folder is empty
+                        </div>`;
+                    return;
+                }
+
+                let subdirsHtml = "";
+                let filesAndZipsHtml = "";
+                let imagesHtml = "";
+
+                let folderCount = 0; let imageCount = 0; let otherCount = 0;
+
+                for (let entry of entries) {
+                    if (entry.kind === 'directory') {
+                        folderCount++;
+                        subdirsHtml += `
+                            <div onclick="enterSubDir('${entry.name}')" class="flex items-center justify-between p-3.5 bg-white rounded-xl shadow-sm hover:shadow-md cursor-pointer border border-slate-200/60 hover:border-blue-300 hover:bg-blue-50/20 transition duration-150 group">
+                                <div class="flex items-center gap-3 truncate">
+                                    <div class="bg-blue-100 p-2.5 rounded-xl text-blue-600 shadow-inner group-hover:scale-105 transition duration-150">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-black text-slate-800 truncate">${entry.name}</span>
+                                </div>
+                                <svg class="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        `;
+                    } else {
+                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(entry.name);
+                        const isZip = entry.name.endsWith('.zip');
+
+                        if (isImage) {
+                            imageCount++;
+                            let localImgUrl = "";
+                            try {
+                                const fileObj = await entry.getFile();
+                                localImgUrl = URL.createObjectURL(fileObj);
+                                explorerUrlCleanupList.push(localImgUrl);
+                            } catch (e) {}
+
+                            const displayImage = localImgUrl ? `
+                                <img src="${localImgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" alt="Preview">
+                            ` : `
+                                <div class="flex flex-col items-center justify-center text-slate-300">
+                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>`;
+
+                            imagesHtml += `
+                                <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition duration-150 group">
+                                    <div class="aspect-square w-full rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center relative shadow-inner">
+                                        ${displayImage}
+                                        <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition duration-150 cursor-pointer" onclick="openZoomFromUrl('${localImgUrl}')">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" /></svg>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 px-1">
+                                        <span class="text-[11px] font-black text-slate-800 truncate block text-center" title="${entry.name}">${entry.name}</span>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            otherCount++;
+                            const iconColor = isZip ? 'text-indigo-600 bg-indigo-100' : 'text-slate-600 bg-slate-100';
+                            const fileIcon = isZip ? `
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>` : `
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>`;
+
+                            filesAndZipsHtml += `
+                                <div class="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-200/60 hover:border-slate-300 transition duration-150">
+                                    <div class="flex items-center gap-3 truncate">
+                                        <div class="${iconColor} p-2 rounded-lg shadow-inner shrink-0">
+                                            ${fileIcon}
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-700 truncate">${entry.name}</span>
+                                    </div>
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">${isZip ? 'ZIP File' : 'Document'}</span>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+
+                let finalHtml = "";
+                if (folderCount > 0) {
+                    finalHtml += `
+                        <div class="mb-5">
+                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                Folders (${folderCount})
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${subdirsHtml}</div>
+                        </div>`;
+                }
+                if (imageCount > 0) {
+                    finalHtml += `
+                        <div class="mb-5">
+                            <h4 class="text-[9px] font-black text-[#00a676] uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                Renamed Photos (${imageCount})
+                            </h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">${imagesHtml}</div>
+                        </div>`;
+                }
+                if (otherCount > 0) {
+                    finalHtml += `
+                        <div class="mb-2">
+                            <h4 class="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Other Files & Zips (${otherCount})
+                            </h4>
+                            <div class="flex flex-col gap-2">${filesAndZipsHtml}</div>
+                        </div>`;
+                }
+                container.innerHTML = finalHtml;
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = `<div class="p-8 text-center text-xs font-black text-red-500">Failed to read directory. Try setting permission locally in browser header.</div>`;
+            }
+        }
+
+        async function enterSubDir(name) {
+            try {
+                const subDir = await currentDirHandle.getDirectoryHandle(name);
+                currentDirHandle = subDir;
+                dirNavigationStack.push({ handle: subDir, name: name });
+                await renderExplorerContents();
+            } catch(e) { showToast("Failed to open subfolder", "error"); }
+        }
+
+        async function navigateExplorerTo(idx) {
+            dirNavigationStack = dirNavigationStack.slice(0, idx + 1);
+            currentDirHandle = dirNavigationStack[dirNavigationStack.length - 1].handle;
+            await renderExplorerContents();
+        }
+
+        function closeFolderExplorer() {
+            explorerUrlCleanupList.forEach(url => URL.revokeObjectURL(url));
+            explorerUrlCleanupList = [];
+            document.getElementById('folderExplorerModal').classList.add('hidden');
+            document.getElementById('folderExplorerModal').classList.remove('flex');
+            if(renameStep.style.display !== 'none') barcodeInput.focus();
+        }
+
+        window.openZoomFromUrl = function(url) {
+            if(url) {
+                document.getElementById('zoomedImage').src = url;
+                document.getElementById('imageZoomModal').classList.remove('hidden');
+                document.getElementById('imageZoomModal').classList.add('flex');
+            }
+        }
+
+        // NEW: VIEW SCANNED IMAGE
+        window.viewScannedImage = async function(dbId) {
+            const blob = await getFileFromDB(dbId);
+            if(blob) {
+                const url = URL.createObjectURL(blob);
+                document.getElementById('zoomedImage').src = url;
+                document.getElementById('imageZoomModal').classList.remove('hidden');
+                document.getElementById('imageZoomModal').classList.add('flex');
+            }
+        };
+
+        const thumbCache = new Map();
+        async function getThumbnailURL(dbId) {
+            if (thumbCache.has(dbId)) return thumbCache.get(dbId);
+            const blob = await getFileFromDB(dbId);
+            if (blob) { const url = URL.createObjectURL(blob); thumbCache.set(dbId, url); return url; }
+            return "";
+        }
+
+        async function loadThumbnails() {
+            const imgs = document.querySelectorAll('.async-thumb');
+            for (let img of imgs) {
+                if (img.src && img.src.startsWith('blob:')) continue; 
+                const dbId = img.getAttribute('data-dbid');
+                if (!dbId) continue;
+                const url = await getThumbnailURL(dbId);
+                if (url) { img.src = url; img.classList.remove('async-thumb'); }
+            }
+        }
+
+        function showGlobalLoader(text) { document.getElementById('globalLoaderText').innerText = text; document.getElementById('globalLoader').classList.remove('hidden'); document.getElementById('globalLoader').classList.add('flex'); }
+        function hideGlobalLoader() { document.getElementById('globalLoader').classList.add('hidden'); document.getElementById('globalLoader').classList.remove('flex'); }
+
+        function openZoomModal() { if(imagePreview.src && imagePreview.src !== window.location.href) { document.getElementById('zoomedImage').src = imagePreview.src; document.getElementById('imageZoomModal').classList.remove('hidden'); document.getElementById('imageZoomModal').classList.add('flex'); } }
+        function closeZoomModal() { document.getElementById('imageZoomModal').classList.add('hidden'); document.getElementById('imageZoomModal').classList.remove('flex'); if(renameStep.style.display !== 'none') barcodeInput.focus(); }
+
+        autoCopyToggle.addEventListener('change', (e) => {
+            localStorage.setItem('renamer_auto_copy', e.target.checked);
+            if(e.target.checked) document.getElementById('toggleContainer').classList.add('ring-2', 'ring-indigo-400', 'ring-offset-2');
+            else document.getElementById('toggleContainer').classList.remove('ring-2', 'ring-indigo-400', 'ring-offset-2');
+            if(currentIndex < files.length) barcodeInput.focus();
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            const selectedFiles = Array.from(e.target.files);
+            if (selectedFiles.length === 0) return;
+            showGlobalLoader("Saving to Secure Vault...");
+            await clearVaultDB(); thumbCache.clear(); files = []; renamedFiles = []; batches = []; undoStack = []; redoStack = []; currentIndex = 0; isProcessingCopy = false;
+
+            const sortedFiles = selectedFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
+            let tempFilesArr = [];
+            for (let f of sortedFiles) {
+                const uniqueDbId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                tempFilesArr.push({ dbId: uniqueDbId, originalName: f.name, fileObj: f });
+            }
+            await bulkSaveToDB(tempFilesArr);
+            files = tempFilesArr.map(f => ({ dbId: f.dbId, originalName: f.originalName }));
+            saveWorkspaceState(); 
+            
+            setupStep.style.display = 'none'; renameStep.style.display = 'flex'; 
+            updateHistoryUI(); updateUndoRedoUI(); renderBatches(); await refreshUIState(); hideGlobalLoader();
+        });
+
+        addQueueInput.addEventListener('change', async (e) => {
+            const newFiles = Array.from(e.target.files);
+            if (newFiles.length === 0) return;
+            showGlobalLoader("Adding to Secure Vault...");
+
+            const sortedNewFiles = newFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
+            let tempFilesArr = [];
+            for (let f of sortedNewFiles) {
+                const uniqueDbId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                tempFilesArr.push({ dbId: uniqueDbId, originalName: f.name, fileObj: f });
+            }
+            await bulkSaveToDB(tempFilesArr);
+            const sanitizedFiles = tempFilesArr.map(f => ({ dbId: f.dbId, originalName: f.originalName }));
+            files = [...files, ...sanitizedFiles];
+            saveWorkspaceState();
+            
+            hideGlobalLoader(); showToast(`${newFiles.length} Photos Added!`, 'success'); await refreshUIState(); e.target.value = '';
+        });
+
+        skipBtn.addEventListener('click', async () => {
+            if(currentIndex < files.length) {
+                saveStateForUndo(); 
+                if (isProcessingCopy) { isProcessingCopy = false; currentIndex++; } else { files.splice(currentIndex, 1); }
+                saveWorkspaceState(); showToast("SKIPPED PHOTO", "default"); updateHistoryUI(); updateUndoRedoUI(); await refreshUIState();
+            }
+        });
+
+        function cleanupMainUrl() { if (currentMainUrl) { URL.revokeObjectURL(currentMainUrl); currentMainUrl = null; } }
+
+        async function refreshUIState() {
+            const total = files.length;
+            const remaining = total - currentIndex;
+            remainingCountEl.innerText = remaining > 0 ? remaining : 0;
+
+            if (currentIndex < total) {
+                cleanupMainUrl(); barcodeBoxContainer.style.display = 'block'; controlsRow.style.display = 'flex'; skipBtn.classList.remove('hidden'); noImage.classList.add('hidden');
+                const fileRef = files[currentIndex];
+                let displayName = fileRef.originalName;
+                
+                if (isProcessingCopy) {
+                    const dotIndex = fileRef.originalName.lastIndexOf('.');
+                    displayName = fileRef.originalName.substring(0, dotIndex) + " - COPY" + fileRef.originalName.substring(dotIndex);
+                    fileNamePill.classList.replace('bg-slate-200/50', 'bg-indigo-100'); fileNamePill.classList.replace('text-slate-600', 'text-indigo-800'); fileNamePill.classList.add('animate-pulse'); 
+                } else {
+                    fileNamePill.classList.replace('bg-indigo-100', 'bg-slate-200/50'); fileNamePill.classList.replace('text-indigo-800', 'text-slate-600'); fileNamePill.classList.remove('animate-pulse');
+                }
+                
+                currentFileNameDisplay.innerText = displayName; imagePreview.style.opacity = '0';
+                const blob = await getFileFromDB(fileRef.dbId);
+                if(blob) { currentMainUrl = URL.createObjectURL(blob); imagePreview.src = currentMainUrl; }
+                
+                setTimeout(() => { imagePreview.classList.remove('hidden'); imagePreview.style.opacity = '1'; }, 10); 
+                barcodeInput.value = ""; barcodeInput.focus();
+            } else {
+                imagePreview.classList.add('hidden'); controlsRow.style.display = 'none'; barcodeBoxContainer.style.display = 'none'; skipBtn.classList.add('hidden'); noImage.classList.remove('hidden');
+                if (renamedFiles.length > 0) {
+                    noImage.innerHTML = `<div class='text-blue-500 mb-3 flex justify-center'><svg class='h-12 w-12' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' /></svg></div><h2 class='text-xl font-black uppercase tracking-widest text-slate-700 mb-2'>Scanning Complete</h2><p class='text-slate-500 font-bold text-xs max-w-xs'>Please click "Save & Move to Batch Queue" on the right to save your progress.</p>`;
+                } else {
+                    noImage.innerHTML = `<div class='text-green-500 mb-4 flex justify-center'><svg class='h-14 w-14' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 13l4 4L19 7' /></svg></div><h2 class='text-2xl font-black uppercase tracking-widest text-slate-800 mb-6'>Batch Saved!</h2><button onclick="document.getElementById('addQueueInput').click()" class="bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition active:scale-95 shadow-lg shadow-indigo-200 flex items-center gap-2"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>ADD MORE PHOTOS</button>`;
+                }
+            }
+        }
+
+        let isEnterLocked = false; 
+        barcodeInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); if(isEnterLocked) return; 
+                const barcode = barcodeInput.value.trim();
+                if (!barcode || barcode === "") return; 
+                isEnterLocked = true; await processRename(barcode); isEnterLocked = false;
+            }
+        });
+
+        document.addEventListener('keydown', async (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); await window.undoAction(); }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); await window.redoAction(); }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (renameStep.style.display === 'none') return;
+            const isModalHidden = editModal.classList.contains('hidden') && document.getElementById('imageZoomModal').classList.contains('hidden') && document.getElementById('batchDetailsModal').classList.contains('hidden') && document.getElementById('globalResetModal').classList.contains('hidden') && document.getElementById('folderExplorerModal').classList.contains('hidden');
+            if (currentIndex < files.length && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button') && isModalHidden) { barcodeInput.focus(); }
+        });
+
+        async function processRename(newLabel) {
+            if (!newLabel || newLabel.trim() === "") return; 
+            if (renamedFiles.some(item => item.newName.split('.')[0] === newLabel)) {
+                barcodeInput.parentElement.classList.add('border-red-500', 'error-shake', 'bg-red-50');
+                setTimeout(() => barcodeInput.parentElement.classList.remove('error-shake', 'border-red-500', 'bg-red-50'), 400);
+                barcodeInput.value = ""; showToast("DUPLICATE ENTRY!", 'error'); return;
+            }
+
+            saveStateForUndo();
+
+            const fileRef = files[currentIndex];
+            const extension = fileRef.originalName.split('.').pop();
+            const dotIndex = fileRef.originalName.lastIndexOf('.');
+            const baseName = fileRef.originalName.substring(0, dotIndex);
+            
+            let storedOriginalName = fileRef.originalName;
+            if (isProcessingCopy) storedOriginalName = `${baseName} - COPY.${extension}`;
+            const newName = `${newLabel}.${extension}`;
+            
+            const newItem = { originalName: storedOriginalName, newName: newName, dbId: fileRef.dbId };
+            renamedFiles.push(newItem);
+            
+            if (autoCopyToggle.checked && !isProcessingCopy) { isProcessingCopy = true; } else { isProcessingCopy = false; currentIndex++; }
+
+            saveWorkspaceState(); updateHistoryUI(); await refreshUIState();
+        }
+
+        window.undoAction = async function() {
+            if (undoStack.length === 0) return;
+            
+            redoStack.push({
+                currentIndex, isProcessingCopy,
+                renamedFiles: [...renamedFiles],
+                files: [...files]
+            });
+            
+            const state = undoStack.pop();
+            currentIndex = state.currentIndex; isProcessingCopy = state.isProcessingCopy;
+            renamedFiles = state.renamedFiles; files = state.files;
+            
+            saveWorkspaceState(); updateHistoryUI(); updateUndoRedoUI(); await refreshUIState(); showToast("UNDO SUCCESSFUL", "default");
+        };
+
+        window.redoAction = async function() {
+            if (redoStack.length === 0) return;
+            
+            undoStack.push({
+                currentIndex, isProcessingCopy,
+                renamedFiles: [...renamedFiles],
+                files: [...files]
+            });
+            
+            const state = redoStack.pop();
+            currentIndex = state.currentIndex; isProcessingCopy = state.isProcessingCopy;
+            renamedFiles = state.renamedFiles; files = state.files;
+            
+            saveWorkspaceState(); updateHistoryUI(); updateUndoRedoUI(); await refreshUIState(); showToast("REDO SUCCESSFUL", "default");
+        };
+
+        function updateUndoRedoUI() {
+            const undoBtn = document.getElementById('undoBtn'), redoBtn = document.getElementById('redoBtn');
+            undoBtn.disabled = undoStack.length === 0; redoBtn.disabled = redoStack.length === 0;
+            
+            if (undoStack.length === 0) { 
+                undoBtn.classList.add('opacity-50', 'cursor-default'); 
+                undoBtn.classList.remove('opacity-100', 'cursor-pointer'); 
+            } else { 
+                undoBtn.classList.add('opacity-100', 'cursor-pointer'); 
+                undoBtn.classList.remove('opacity-50', 'cursor-default'); 
+            }
+            
+            if (redoStack.length === 0) { 
+                redoBtn.classList.add('opacity-50', 'cursor-default'); 
+                redoBtn.classList.remove('opacity-100', 'cursor-pointer'); 
+            } else { 
+                redoBtn.classList.add('opacity-100', 'cursor-pointer'); 
+                redoBtn.classList.remove('opacity-50', 'cursor-default'); 
+            }
+        }
+
+        function updateHistoryUI() {
+            document.getElementById('scannedCount').innerText = renamedFiles.length; 
+            if (renamedFiles.length > 0) {
+                emptyHistory.classList.add('hidden');
+                let htmlContent = "";
+                [...renamedFiles].reverse().forEach((item, index) => {
+                    const actualIndex = renamedFiles.length - 1 - index;
+                    const cUrl = thumbCache.get(item.dbId);
+                    const imgTag = cUrl ? `<img src="${cUrl}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 bg-slate-100 shadow-sm" loading="lazy">` : `<img src="" data-dbid="${item.dbId}" class="async-thumb w-16 h-16 object-cover rounded-lg border border-slate-200 bg-slate-100 shadow-sm" loading="lazy">`;
+
+                    htmlContent += `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50">
+                        <td class="px-3 py-2 w-20">${imgTag}</td>
+                        <td class="px-2 py-2"><span class="font-black text-slate-800 text-sm tracking-tight break-all">${item.newName}</span></td>
+                        <td class="px-2 py-2"><span class="text-xs font-bold text-slate-400 italic break-all">${item.originalName}</span></td>
+                        <td class="px-2 py-2 text-right whitespace-nowrap">
+                            <button onclick="viewScannedImage('${item.dbId}')" class="text-emerald-500 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors mr-1" title="View Full Photo"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+                            <button onclick="openEditModal(${actualIndex})" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-1" title="Edit"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                            <button onclick="deleteFromHistory(${actualIndex})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Delete"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </td>
+                    </tr>`;
+                });
+                historyTableBody.innerHTML = htmlContent; loadThumbnails(); 
+            } else { emptyHistory.classList.remove('hidden'); historyTableBody.innerHTML = ""; }
+        }
+
+        window.deleteFromHistory = async function(index) {
+            saveStateForUndo();
+            renamedFiles.splice(index, 1);
+            saveWorkspaceState(); updateHistoryUI(); await refreshUIState(); showToast("REMOVED FROM LOG", "default");
+        };
+
+        window.openEditModal = async (index) => {
+            editingIndex = index;
+            const item = renamedFiles[index];
+            document.getElementById('editInput').value = item.newName.split('.')[0];
+            document.getElementById('editThumbPreview').src = await getThumbnailURL(item.dbId);
+            document.getElementById('editModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('editInput').focus(), 100);
+        };
+
+        document.getElementById('cancelEdit').onclick = () => { document.getElementById('editModal').classList.add('hidden'); if(currentIndex < files.length) barcodeInput.focus(); };
+
+        document.getElementById('saveEdit').onclick = () => {
+            const newLabel = document.getElementById('editInput').value.trim();
+            if (!newLabel) return;
+            if (renamedFiles.some((item, idx) => idx !== editingIndex && item.newName.split('.')[0] === newLabel)) {
+                document.getElementById('editError').innerText = "❌ EXISTS!"; document.getElementById('editError').classList.remove('hidden'); document.getElementById('editError').classList.add('error-vibrate'); setTimeout(() => document.getElementById('editError').classList.remove('error-vibrate'), 300); return;
+            }
+            
+            saveStateForUndo();
+            document.getElementById('editError').classList.add('hidden');
+            renamedFiles[editingIndex].newName = `${newLabel}.${renamedFiles[editingIndex].newName.split('.').pop()}`;
+            saveWorkspaceState(); updateHistoryUI(); document.getElementById('editModal').classList.add('hidden'); showToast("UPDATED!", 'success'); if(currentIndex < files.length) barcodeInput.focus();
+        };
+
+        document.getElementById('addToQueueBtn').addEventListener('click', async () => {
+            if (renamedFiles.length === 0) { showToast("No scans to move!", "error"); return; }
+            batches.push({ id: Date.now(), batchNum: batches.length + 1, fileCount: renamedFiles.length, firstFileName: renamedFiles[0].newName, firstDbId: renamedFiles[0].dbId, items: [...renamedFiles] });
+            undoStack = []; redoStack = []; renamedFiles = [];
+            saveWorkspaceState(); updateHistoryUI(); updateUndoRedoUI(); renderBatches(); await refreshUIState(); showToast(`BATCH CREATED!`, "success");
+        });
+
+        document.getElementById('clearQueueBtn').addEventListener('click', () => {
+            if(batches.length > 0) { batches = []; saveWorkspaceState(); renderBatches(); showToast("QUEUE CLEARED", "default"); }
+        });
+
+        let unpackingBatchId = null;
+        window.openBatchDetails = function(id) {
+            const batch = batches.find(b => b.id === id);
+            if (!batch) return; unpackingBatchId = id;
+            document.getElementById('batchModalId').innerText = `#${batch.batchNum}`; document.getElementById('batchModalCount').innerText = batch.fileCount;
+            let html = '';
+            batch.items.forEach((item) => {
+                const cUrl = thumbCache.get(item.dbId);
+                const imgTag = cUrl ? `<img src="${cUrl}" class="w-10 h-10 object-cover rounded border border-slate-200 bg-slate-100" loading="lazy">` : `<img src="" data-dbid="${item.dbId}" class="async-thumb w-10 h-10 object-cover rounded border border-slate-200 bg-slate-100" loading="lazy">`;
+                html += `<tr class="hover:bg-slate-50 transition-colors group"><td class="px-6 py-2 w-16">${imgTag}</td><td class="px-4 py-2"><span class="font-black text-slate-800 text-xs tracking-tight break-all">${item.newName}</span></td><td class="px-4 py-2"><span class="text-[10px] font-bold text-slate-400 italic break-all">${item.originalName}</span></td></tr>`;
+            });
+            document.getElementById('batchDetailsTableBody').innerHTML = html; loadThumbnails(); document.getElementById('batchDetailsModal').classList.remove('hidden'); document.getElementById('batchDetailsModal').classList.add('flex');
+        };
+
+        window.closeBatchDetailsModal = function() { document.getElementById('batchDetailsModal').classList.add('hidden'); document.getElementById('batchDetailsModal').classList.remove('flex'); unpackingBatchId = null; if(renameStep.style.display !== 'none') barcodeInput.focus(); };
+
+        document.getElementById('unpackBatchBtn').addEventListener('click', async () => {
+            if (!unpackingBatchId) return;
+            if (renamedFiles.length > 0) { showToast("Save your current scans to queue first!", "error"); return; }
+            const idx = batches.findIndex(b => b.id === unpackingBatchId);
+            if (idx !== -1) {
+                renamedFiles = [...batches[idx].items]; batches.splice(idx, 1); 
+                undoStack = []; redoStack = []; 
+                saveWorkspaceState(); closeBatchDetailsModal(); renderBatches(); updateHistoryUI(); updateUndoRedoUI(); await refreshUIState(); showToast("BATCH UNPACKED FOR EDITING", "success");
+            }
+        });
+
+        function renderBatches() {
+            document.getElementById('queueCountBadge').innerText = batches.length;
+            if (batches.length === 0) { document.getElementById('queueListContainer').innerHTML = `<div id="emptyQueue" class="flex flex-col items-center justify-center text-slate-400 py-2 h-full"><p class="text-[9px] font-black uppercase tracking-widest">Queue is empty</p></div>`; return; }
+            let html = '';
+            [...batches].reverse().forEach(b => {
+                const cUrl = thumbCache.get(b.firstDbId);
+                const imgTag = cUrl ? `<img src="${cUrl}" class="w-10 h-10 rounded object-cover border border-slate-200 bg-slate-50 z-10">` : `<img src="" data-dbid="${b.firstDbId}" class="async-thumb w-10 h-10 rounded object-cover border border-slate-200 bg-slate-50 z-10">`;
+                html += `<div ondblclick="openBatchDetails(${b.id})" class="cursor-pointer flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-300 transition-colors group relative overflow-hidden" title="Double Click to view photos"><div class="flex items-center gap-2.5 z-10"><div class="bg-indigo-50 text-indigo-600 text-[8px] font-black px-1.5 py-1 rounded border border-indigo-100 shadow-sm z-10">#${b.batchNum}</div>${imgTag}<div class="flex flex-col z-10"><span class="text-[10px] font-black text-slate-800">${b.fileCount} Photos</span><span class="text-[8px] font-bold text-slate-500">First: ${b.firstFileName}</span></div></div><div class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div><div class="absolute right-10 text-[9px] font-bold text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest bg-white/80 px-2 py-1 rounded backdrop-blur-sm z-10">Dbl Click to View</div><button onclick="deleteBatch(event, ${b.id})" class="text-slate-300 hover:text-red-500 transition-colors p-1 z-10" title="Delete Batch"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>`;
+            });
+            document.getElementById('queueListContainer').innerHTML = html; loadThumbnails();
+        }
+
+        window.deleteBatch = function(event, id) {
+            event.stopPropagation();
+            const idx = batches.findIndex(b => b.id === id);
+            if (idx !== -1) { batches.splice(idx, 1); saveWorkspaceState(); renderBatches(); showToast("BATCH DELETED", "default"); }
+        }
+
+        document.getElementById('confirmGlobalReset').addEventListener('click', async () => {
+            showGlobalLoader("Wiping Vault..."); await clearVaultDB(); localStorage.clear(); location.reload(); 
+        });
+
+        /* ==============================================================
+           DOWNLOAD LOGIC
+           ============================================================== */
+        downloadZipBtn.addEventListener('click', async () => {
+            if (batches.length === 0 && renamedFiles.length === 0) { showToast("Nothing to download!", "error"); return; }
+            
+            if (!globalOutputHandle) {
+                showToast("PLEASE SET DOWNLOAD LOCATION FIRST!", "error");
+                document.getElementById('setLocationBtn').click(); 
+                return;
+            }
+
+            const hasPerm = await verifyPermission(globalOutputHandle, true);
+            if (!hasPerm) {
+                showToast("FOLDER PERMISSION DENIED!", "error");
+                return;
+            }
+
+            let totalPhotos = 0; let allItems = [];
+            for (const batch of batches) { totalPhotos += batch.items.length; allItems.push(...batch.items); }
+            totalPhotos += renamedFiles.length; allItems.push(...renamedFiles);
+
+            const originalBtnHtml = downloadZipBtn.innerHTML;
+            downloadZipBtn.innerHTML = "<svg class='animate-spin h-4 w-4 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'><circle class='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4'></circle><path class='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path></svg> PREPARING...";
+            downloadZipBtn.disabled = true;
+
+            try {
+                if (totalPhotos <= 20) {
+                    const ts = new Date().getTime();
+                    const newFolderName = `Harsh_Photos_${ts}`;
+                    const targetDirHandle = await globalOutputHandle.getDirectoryHandle(newFolderName, { create: true });
+
+                    for (let i = 0; i < allItems.length; i++) {
+                        const item = allItems[i];
+                        const blob = await getFileFromDB(item.dbId);
+                        if(blob) {
+                            const fileHandle = await targetDirHandle.getFileHandle(item.newName, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(blob);
+                            await writable.close();
+                        }
+                    }
+                    showToast(`SAVED TO NEW FOLDER: ${newFolderName}!`, 'success');
+
+                } else {
+                    const ts = new Date().getTime();
+                    const fileName = `Harsh_Photos_${ts}.zip`;
+
+                    downloadZipBtn.innerHTML = "<svg class='animate-spin h-4 w-4 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'><circle class='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4'></circle><path class='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path></svg> PACKAGING ZIP...";
+
+                    const zip = new JSZip();
+                    for (const item of allItems) {
+                        const blob = await getFileFromDB(item.dbId);
+                        if (blob) { zip.file(item.newName, blob); }
+                    }
+                    const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
+
+                    const fileHandle = await globalOutputHandle.getFileHandle(fileName, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                    showToast("ZIP SAVED TO SELECTED LOCATION!", 'success');
+                }
+
+            } catch (err) {
+                console.error(err); showToast("ERROR DURING DOWNLOAD!", 'error');
+            } finally {
+                downloadZipBtn.innerHTML = originalBtnHtml; downloadZipBtn.disabled = false;
+            }
+        });
+
+        function showToast(msg, type = 'default') {
+            const toastEl = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMsg');
+            msgEl.innerText = msg;
+            
+            if(type === 'error') {
+                toastEl.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl opacity-100 transition-all duration-300 z-50 font-black text-[10px] uppercase tracking-widest pointer-events-none flex items-center gap-2 transform translate-y-0";
+            } else if(type === 'success') {
+                toastEl.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-green-400 px-6 py-3 rounded-full shadow-2xl opacity-100 transition-all duration-300 z-50 font-black text-[10px] uppercase tracking-widest pointer-events-none flex items-center gap-2 transform translate-y-0";
+            } else {
+                toastEl.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-100 transition-all duration-300 z-50 font-black text-[10px] uppercase tracking-widest pointer-events-none flex items-center gap-2 transform translate-y-0";
+            }
+
+            setTimeout(() => {
+                toastEl.classList.remove('opacity-100', 'translate-y-0');
+                toastEl.classList.add('opacity-0', 'translate-y-4');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
